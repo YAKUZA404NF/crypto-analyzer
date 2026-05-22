@@ -42,6 +42,10 @@ function App() {
     return () => clearInterval(interval);
   }, []);
 
+  const handleBetaClick = () => {
+    alert("🚀 Pro Features & Wallet Integration are currently in private Beta! Follow our socials to get notified when we launch.");
+  };
+
   return (
     <div className="app-container">
       <header className="animate-fade-in">
@@ -57,7 +61,7 @@ function App() {
           </svg>
           CryptoFlow AI
         </div>
-        <button className="glass-btn">Connect Wallet</button>
+        <button className="glass-btn" onClick={handleBetaClick}>Connect Wallet</button>
       </header>
 
       <main>
@@ -65,8 +69,8 @@ function App() {
           <h1>Predict the Next Move with <span>AI Precision</span></h1>
           <p>Advanced algorithmic trend analysis for Bitcoin, Ethereum, and major altcoins. Stop guessing, start trading with data.</p>
           <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '2rem' }}>
-             <button className="glass-btn">Start Free Trial</button>
-             <button className="glass-btn" style={{ background: 'transparent' }}>View Demo</button>
+             <button className="glass-btn" onClick={handleBetaClick}>Start Free Trial</button>
+             <button className="glass-btn" style={{ background: 'transparent' }} onClick={handleBetaClick}>View Demo</button>
           </div>
         </section>
 
@@ -112,7 +116,7 @@ function App() {
             </svg>
             <p>Premium Charting Module</p>
             <p style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>Unlock full AI predictive charts with a Pro subscription.</p>
-            <button className="glass-btn" style={{ marginTop: '1.5rem', padding: '8px 20px', fontSize: '0.9rem' }}>Upgrade to Pro</button>
+            <button className="glass-btn" style={{ marginTop: '1.5rem', padding: '8px 20px', fontSize: '0.9rem' }} onClick={handleBetaClick}>Upgrade to Pro</button>
           </div>
         </section>
       </main>
