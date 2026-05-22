@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
 function App() {
   const [data, setData] = useState({
@@ -8,6 +9,10 @@ function App() {
     ethTrend: 0,
     volatility: 'Calculating...'
   });
+  
+  const [chartData, setChartData] = useState<any[]>([]);
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const [isConnecting, setIsConnecting] = useState(false);
 
   useEffect(() => {
     const fetchPrices = async () => {
@@ -37,13 +42,56 @@ function App() {
       }
     };
 
+    const fetchChartData = async () => {
+      try {
+        const res = await fetch('https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=1h&limit=24');
+        const klines = await res.json();
+        const formattedData = klines.map((k: any) => {
+          const date = new Date(k[0]);
+          return {
+            time: `${date.getHours()}:00`,
+            price: parseFloat(k[4]) // close price
+          };
+        });
+        setChartData(formattedData);
+      } catch (error) {
+        console.error('Error fetching chart data:', error);
+      }
+    };
+
     fetchPrices();
-    const interval = setInterval(fetchPrices, 10000); // Update every 10 seconds
+    fetchChartData();
+    const interval = setInterval(fetchPrices, 10000); 
     return () => clearInterval(interval);
   }, []);
 
   const handleBetaClick = () => {
-    alert("🚀 Pro Features & Wallet Integration are currently in private Beta! Follow our socials to get notified when we launch.");
+    alert("🚀 Pro Features & Real-time Trading are currently in private Beta! Follow our socials to get notified when we launch.");
+  };
+
+  const connectWallet = () => {
+    if (walletAddress) return;
+    setIsConnecting(true);
+    // Simulate connection delay
+    setTimeout(() => {
+      setWalletAddress('0x7F4...3aB9');
+      setIsConnecting(false);
+    }, 1200);
+  };
+
+  // Custom Tooltip for Recharts
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div style={{ background: 'var(--primary-bg)', border: '1px solid var(--glass-border)', padding: '10px', borderRadius: '8px' }}>
+          <p style={{ margin: 0, color: 'var(--text-muted)' }}>{label}</p>
+          <p style={{ margin: 0, fontWeight: 'bold', color: 'var(--primary-accent)' }}>
+            ${payload[0].value.toLocaleString()}
+          </p>
+        </div>
+      );
+    }
+    return null;
   };
 
   return (
@@ -61,7 +109,9 @@ function App() {
           </svg>
           CryptoFlow AI
         </div>
-        <button className="glass-btn" onClick={handleBetaClick}>Connect Wallet</button>
+        <button className="glass-btn" onClick={connectWallet} disabled={isConnecting}>
+          {isConnecting ? 'Connecting...' : walletAddress ? `Connected: ${walletAddress}` : 'Connect Wallet'}
+        </button>
       </header>
 
       <main>
@@ -80,7 +130,7 @@ function App() {
             <div className="value">
               ${data.btcPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               <span className={data.btcTrend > 0 ? 'trend-up' : 'trend-down'}>
-                {data.btcTrend > 0 ? '▲' : '▼'} {Math.abs(data.btcTrend)}%
+                {data.btcTrend > 0 ? '▲' : '▼'} {Math.abs(data.btcTrend).toFixed(2)}%
               </span>
             </div>
           </div>
@@ -90,7 +140,7 @@ function App() {
             <div className="value">
               ${data.ethPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               <span className={data.ethTrend > 0 ? 'trend-up' : 'trend-down'}>
-                {data.ethTrend > 0 ? '▲' : '▼'} {Math.abs(data.ethTrend)}%
+                {data.ethTrend > 0 ? '▲' : '▼'} {Math.abs(data.ethTrend).toFixed(2)}%
               </span>
             </div>
           </div>
@@ -106,18 +156,34 @@ function App() {
         </section>
 
         <section className="glass-panel chart-container animate-fade-in" style={{ animationDelay: '0.6s' }}>
-          <h2>Live Trend Analysis</h2>
-          <div className="placeholder">
-            <svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="var(--glass-glow)" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" style={{ margin: '0 auto 1rem', display: 'block' }}>
-              <path d="M3 3v18h18"></path>
-              <path d="M18 17V9"></path>
-              <path d="M13 17V5"></path>
-              <path d="M8 17v-3"></path>
-            </svg>
-            <p>Premium Charting Module</p>
-            <p style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>Unlock full AI predictive charts with a Pro subscription.</p>
-            <button className="glass-btn" style={{ marginTop: '1.5rem', padding: '8px 20px', fontSize: '0.9rem' }} onClick={handleBetaClick}>Upgrade to Pro</button>
-          </div>
+          <h2>Live Trend Analysis (BTC/USDT)</h2>
+          
+          {!walletAddress ? (
+            <div className="placeholder" style={{ padding: '4rem 0' }}>
+              <svg width="100" height="100" viewBox="0 0 24 24" fill="none" stroke="var(--glass-glow)" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round" style={{ margin: '0 auto 1rem', display: 'block' }}>
+                <path d="M3 3v18h18"></path>
+                <path d="M18 17V9"></path>
+                <path d="M13 17V5"></path>
+                <path d="M8 17v-3"></path>
+              </svg>
+              <p>Premium Charting Module</p>
+              <p style={{ fontSize: '0.8rem', marginTop: '0.5rem' }}>Connect your wallet to unlock full interactive predictive charts.</p>
+              <button className="glass-btn" style={{ marginTop: '1.5rem', padding: '8px 20px', fontSize: '0.9rem' }} onClick={connectWallet}>
+                {isConnecting ? 'Connecting...' : 'Connect Wallet to Unlock'}
+              </button>
+            </div>
+          ) : (
+            <div style={{ width: '100%', height: '400px' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+                  <XAxis dataKey="time" stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} />
+                  <YAxis domain={['auto', 'auto']} stroke="var(--text-muted)" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => `$${val.toLocaleString()}`} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Line type="monotone" dataKey="price" stroke="var(--primary-accent)" strokeWidth={3} dot={false} activeDot={{ r: 8, fill: 'var(--primary-accent)', stroke: 'white', strokeWidth: 2 }} />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          )}
         </section>
       </main>
     </div>
